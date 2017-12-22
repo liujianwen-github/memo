@@ -5,7 +5,9 @@ const memoSchema = new mongo.Schema({
   title:{type:String},
   content:{type:String,default:"没有内容"},
   createTime:{type:Number},
-  updateTime:{type:Number}
+  updateTime:{type:Number},
+  imgs:{type:Array},
+  collected:{type:Boolean,default:false}
 })
 let memoModel = mongo.model('memos',memoSchema)
 export default{
@@ -50,10 +52,19 @@ export default{
    * @param {{id:string,content:string}} data 
    * @param {Function} callback 
    */
-  updateMemo(data:{id:string,content:string,updateTime:Number},callback:Function){
+  updateMemo(data:{id:string,content:string,updateTime:Number},callback:any){
     memoModel.update({_id:data.id},{content:data.content,updateTime:data.updateTime},{multi:true},callback)
   },
-  deleteItem(id:string,callback:Function){
+  /**
+   * 删除一条文档
+   */
+  deleteItem(id:string,callback:any){
     memoModel.remove({_id:id},callback)
+  },
+  /**
+   * 更新收藏状态
+   */
+  convertCollectStatus({id,status}:any,callback:any){
+    memoModel.update({_id:id},{collected:status},{multi:true},callback)
   }
 }

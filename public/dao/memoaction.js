@@ -7,7 +7,9 @@ var memoSchema = new memo_1.default.Schema({
     title: { type: String },
     content: { type: String, default: "没有内容" },
     createTime: { type: Number },
-    updateTime: { type: Number }
+    updateTime: { type: Number },
+    imgs: { type: Array },
+    collected: { type: Boolean, default: false }
 });
 var memoModel = memo_1.default.model('memos', memoSchema);
 exports.default = {
@@ -55,7 +57,17 @@ exports.default = {
     updateMemo: function (data, callback) {
         memoModel.update({ _id: data.id }, { content: data.content, updateTime: data.updateTime }, { multi: true }, callback);
     },
+    /**
+     * 删除一条文档
+     */
     deleteItem: function (id, callback) {
         memoModel.remove({ _id: id }, callback);
+    },
+    /**
+     * 更新收藏状态
+     */
+    convertCollectStatus: function (_a, callback) {
+        var id = _a.id, status = _a.status;
+        memoModel.update({ _id: id }, { collected: status }, { multi: true }, callback);
     }
 };

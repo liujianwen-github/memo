@@ -3,9 +3,10 @@ import * as bodyParser from 'body-parser'
 import ResObj from './controller/reponse' 
 import Memo from './controller/memoController'
 const app=express()
-app.use(bodyParser.json()) //application/json
-app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(app.limit(100000000));
 
+app.use(bodyParser.json()) //application/json
+app.use(bodyParser.urlencoded({ limit: '50mb',extended: true }));
 app.all('*',function(req,res,next){
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild');
@@ -35,6 +36,18 @@ app.put('/memo',(req,res)=>{
 // 删除一条
 app.delete('/memo',(req,res)=>{
   Memo.deleteInfo(req,res)
+})
+//收藏状态
+app.put('/memo/collect',(req,res)=>{
+  Memo.converCollectedStatus(req,res)
+})
+// 支付
+app.post('/pay',(req,res)=>{
+  // xxxx
+})
+// 登陆
+app.post('/login',(req,res)=>{
+  // xxxx
 })
 app.get('/test',(req,res)=>{
   let data= new ResObj({

@@ -5,8 +5,9 @@ var bodyParser = require("body-parser");
 var reponse_1 = require("./controller/reponse");
 var memoController_1 = require("./controller/memoController");
 var app = express();
+// app.use(app.limit(100000000));
 app.use(bodyParser.json()); //application/json
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.all('*', function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild');
@@ -37,6 +38,18 @@ app.put('/memo', function (req, res) {
 // 删除一条
 app.delete('/memo', function (req, res) {
     memoController_1.default.deleteInfo(req, res);
+});
+//收藏状态
+app.put('/memo/collect', function (req, res) {
+    memoController_1.default.converCollectedStatus(req, res);
+});
+// 支付
+app.post('/pay', function (req, res) {
+    // xxxx
+});
+// 登陆
+app.post('/login', function (req, res) {
+    // xxxx
 });
 app.get('/test', function (req, res) {
     var data = new reponse_1.default({

@@ -3,7 +3,11 @@ import { Response, Request } from 'express-serve-static-core';
 import * as url from 'url'
 import * as queryString from 'querystring'
 import ResObj from './reponse'
+import * as multiparty from 'multiparty'
+import * as fs from 'fs'
 import { Error } from 'mongoose';
+import {encode} from '../util/base64'
+import * as path from 'path'
 
 export default{
   /**
@@ -12,21 +16,53 @@ export default{
    */
   addInfo(req:Request,res:Response){
     // console.log(memoData.add(data))
-    let data = req.body
-    memoData.add(data).then((e)=>{
-        res.send(new ResObj({
-          msg:"添加成功",
-          data:{}
-        }))
-      }).catch((err)=>{
-        console.log(`error:${err}`)
-        res.send(new ResObj({
-          status:410,
-          msg:err,
-          data:{}
-        }))
-        throw new Error("添加数据失败")      
-      })
+    let form = new multiparty.Form({
+      encoding :'utf-8',
+      // uploadDir : "/var/www/html/images/",
+      // uploadDir : __dirname+"/../../images/"
+    })
+    form.parse(req,(err,fields,files)=>{         
+      if(err){
+          console.log(err);
+          // var u={"error" :1,"message":'请上传5M以图片'};
+          // res.end(JSON.stringify(u));
+          return false;
+        }
+      let suffix='' //文件格式
+      let insertData = fields
+      insertData.imgs = []
+      for(let i in files.img){
+        let oldpath=files.img[i]['path'] 
+        console.log(typeof oldpath)
+        if(files){
+          suffix=oldpath.split('.')[1]
+        }else{
+          var u={"error" :1,"message":'请上传正确格式'};
+          res.end(JSON.stringify(u));
+          return false;
+        }
+        let fileData = fs.readFileSync(oldpath)
+        var url = `memo_${new Date().getTime()}'_'${+i}.${suffix}`
+        let savePath = path.join('/var/www/html/images/',url)
+        fs.writeFileSync(savePath,fileData)
+        insertData.imgs.push(`://47.104.7.232/images/${url}`)
+      }
+      memoData.add(insertData).then((e)=>{
+          res.send(new ResObj({
+            msg:"添加成功",
+            data:{}
+          }))
+        }).catch((err)=>{
+          console.log(`error:${err}`)
+          res.send(new ResObj({
+            status:410,
+            msg:err,
+            data:{}
+          }))
+          throw new Error("添加数据失败")      
+        })
+    })
+    
   },
   deleteInfo(req:Request,res:Response){
     let id = req.body.id
@@ -118,6 +154,24 @@ export default{
        }))
      }
    })
+  },
+  converCollectedStatus(req:Request,res:Response){
+    let data= req.body
+    memoData.convertCollectStatus(data,(err:any,raw:any)=>{
+      if(err){
+        res.send(new ResObj({
+          status:410,
+          msg:err,
+          data:{}
+        }))
+        throw new Error("收藏失败")
+      }else{
+        res.send(new ResObj({
+          msg:"收藏成功",
+          data:{}
+        }))
+      }
+    })
   }
 }
 // export default Memo

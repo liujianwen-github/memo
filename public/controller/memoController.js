@@ -3,7 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var memoaction_1 = require("../dao/memoaction");
 var url = require("url");
 var reponse_1 = require("./reponse");
+var multiparty = require("multiparty");
+var fs = require("fs");
 var mongoose_1 = require("mongoose");
+var path = require("path");
 exports.default = {
     /**
      * 直接调用了dao层
@@ -11,20 +14,50 @@ exports.default = {
      */
     addInfo: function (req, res) {
         // console.log(memoData.add(data))
-        var data = req.body;
-        memoaction_1.default.add(data).then(function (e) {
-            res.send(new reponse_1.default({
-                msg: "添加成功",
-                data: {}
-            }));
-        }).catch(function (err) {
-            console.log("error:" + err);
-            res.send(new reponse_1.default({
-                status: 410,
-                msg: err,
-                data: {}
-            }));
-            throw new mongoose_1.Error("添加数据失败");
+        var form = new multiparty.Form({
+            encoding: 'utf-8',
+        });
+        form.parse(req, function (err, fields, files) {
+            if (err) {
+                console.log(err);
+                // var u={"error" :1,"message":'请上传5M以图片'};
+                // res.end(JSON.stringify(u));
+                return false;
+            }
+            var suffix = ''; //文件格式
+            var insertData = fields;
+            insertData.imgs = [];
+            for (var i in files.img) {
+                var oldpath = files.img[i]['path'];
+                console.log(typeof oldpath);
+                if (files) {
+                    suffix = oldpath.split('.')[1];
+                }
+                else {
+                    var u = { "error": 1, "message": '请上传正确格式' };
+                    res.end(JSON.stringify(u));
+                    return false;
+                }
+                var fileData = fs.readFileSync(oldpath);
+                var url = "memo_" + new Date().getTime() + "'_'" + +i + "." + suffix;
+                var savePath = path.join('/var/www/html/images/', url);
+                fs.writeFileSync(savePath, fileData);
+                insertData.imgs.push("://47.104.7.232/images/" + url);
+            }
+            memoaction_1.default.add(insertData).then(function (e) {
+                res.send(new reponse_1.default({
+                    msg: "添加成功",
+                    data: {}
+                }));
+            }).catch(function (err) {
+                console.log("error:" + err);
+                res.send(new reponse_1.default({
+                    status: 410,
+                    msg: err,
+                    data: {}
+                }));
+                throw new mongoose_1.Error("添加数据失败");
+            });
         });
     },
     deleteInfo: function (req, res) {
@@ -119,6 +152,25 @@ exports.default = {
                     data: {
                         list: memos
                     }
+                }));
+            }
+        });
+    },
+    converCollectedStatus: function (req, res) {
+        var data = req.body;
+        memoaction_1.default.convertCollectStatus(data, function (err, raw) {
+            if (err) {
+                res.send(new reponse_1.default({
+                    status: 410,
+                    msg: err,
+                    data: {}
+                }));
+                throw new mongoose_1.Error("收藏失败");
+            }
+            else {
+                res.send(new reponse_1.default({
+                    msg: "收藏成功",
+                    data: {}
                 }));
             }
         });
